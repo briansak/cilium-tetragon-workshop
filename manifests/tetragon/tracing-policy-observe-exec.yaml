@@ -1,0 +1,12 @@
+# Observe process execution (no enforcement). Adjust apiVersion if your CRD differs.
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: ai-demo-exec-observe
+spec:
+  kprobes:
+    - call: "security_bprm_check"
+      syscall: false
+      args:
+        - index: 0
+          type: "linux_binprm"
