@@ -1,0 +1,94 @@
+# Minimal CPU-friendly AI demo: Ollama + a client that calls the HTTP API.
+# Namespace: ai-demo
+# After apply: pull a small model (see lab guide), then traffic appears for Hubble.
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ai-demo
+  labels:
+    app: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - containerPort: 11434
+              name: http
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "2"
+              memory: "3Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ai-demo
+spec:
+  selector:
+    app: ollama
+  ports:
+    - port: 11434
+      targetPort: 11434
+      name: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prompt-client
+  namespace: ai-demo
+  labels:
+    app: prompt-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prompt-client
+  template:
+    metadata:
+      labels:
+        app: prompt-client
+    spec:
+      containers:
+        - name: client
+          image: curlimages/curl:8.5.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Ollama + model (lab pulls tinyllama separately)..."
+              sleep 120
+              while true; do
+                curl -sS -m 180 -X POST http://ollama:11434/api/generate \
+                  -H 'Content-Type: application/json' \
+                  -d '{"model":"tinyllama","prompt":"Say hello in five words.","stream":false}' \
+                  | head -c 240 || echo "request failed"
+                echo ""
+                sleep 90
+              done
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
