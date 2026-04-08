@@ -1,0 +1,33 @@
+# Runtime enforcement: SIGKILL on read of a lab-only marker path.
+# Create the file AFTER applying workloads, BEFORE applying this policy (see lab guide).
+# Path is unusual to avoid accidental collisions with other workloads.
+apiVersion: cilium.io/v1alpha1
+kind: TracingPolicy
+metadata:
+  name: ai-demo-enforce-read-marker
+spec:
+  kprobes:
+    - call: "security_file_permission"
+      syscall: false
+      return: true
+      args:
+        - index: 0
+          type: "file"
+        - index: 1
+          type: "int"
+      returnArg:
+        index: 0
+        type: "int"
+        returnArgAction: "Post"
+      selectors:
+        - matchArgs:
+            - index: 0
+              operator: "Equal"
+              values:
+                - "/tmp/ai-demo-lab-secret"
+            - index: 1
+              operator: "Equal"
+              values:
+                - "4"
+          matchActions:
+            - action: Sigkill
