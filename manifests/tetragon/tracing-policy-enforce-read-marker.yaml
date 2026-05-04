@@ -1,5 +1,5 @@
-# Runtime enforcement: SIGKILL on read of a lab-only path (see lab guide).
-# Targets /tmp/ollama-instructions.txt — create that file before applying this policy.
+# Runtime enforcement: SIGKILL on read of /etc/os-release (Ollama pod — see lab guide).
+# Apply only after you have read the file once without the policy; removes need for a synthetic file.
 apiVersion: cilium.io/v1alpha1
 kind: TracingPolicy
 metadata:
@@ -22,7 +22,7 @@ spec:
             - index: 0
               operator: "Equal"
               values:
-                - "/tmp/ollama-instructions.txt"
+                - "/etc/os-release"
             - index: 1
               operator: "Equal"
               values:
