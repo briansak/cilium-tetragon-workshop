@@ -1,5 +1,5 @@
-# Runtime enforcement: SIGKILL on read of /etc/os-release (Ollama pod — see lab guide).
-# Apply only after you have read the file once without the policy; removes need for a synthetic file.
+# Runtime enforcement: SIGKILL on read of os-release in the Ollama pod (see lab guide).
+# /etc/os-release is often a symlink; match both the link and /usr/lib/os-release (kernel path).
 apiVersion: cilium.io/v1alpha1
 kind: TracingPolicy
 metadata:
@@ -23,6 +23,7 @@ spec:
               operator: "Equal"
               values:
                 - "/etc/os-release"
+                - "/usr/lib/os-release"
             - index: 1
               operator: "Equal"
               values:
